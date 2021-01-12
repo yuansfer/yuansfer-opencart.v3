@@ -1,0 +1,66 @@
+{{ header }}
+<div id="container" class="container j-container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+  <div class="row">{{ column_left }}
+    {% if column_left and column_right %}
+    {% set class = 'col-sm-6' %}
+    {% elseif column_left or column_right %}
+    {% set class = 'col-sm-9' %}
+    {% else %}
+    {% set class = 'col-sm-12' %}
+    {% endif %}
+    <div id="content" class="{{ class }}">{{ content_top }}
+      <h1 class="heading-title">{{ heading_title }}</h1>
+      <div id="yuansfer-message" style="font-size:24px;text-align:center;">
+        {% if not failed %}
+        <i class="fa fa-spinner fa-spin" style="font-size:60px;"></i><br /><br />
+        {% endif %}
+        {{ description }}
+        {% if failed %}
+        <br /><br />
+        {{ message }}
+        <br /><br />
+        <a href="{{ checkout }}" class="button">{{ button_checkout }}</a><br /><br />
+        {% endif %}
+      </div>
+    {{ content_bottom }}</div>
+  {{ column_right }}</div>
+</div>
+{% if not failed %}
+<script type="text/javascript">
+var enquireStatus = setInterval(function() {
+    $.ajax({
+        url: 'index.php?route=extension/payment/yuansfer/status',
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        success: function(json) {
+            if (typeof json['status'] !== 'undefined') {
+                if (json['message']) {
+                    $('#yuansfer-message').html(json['message']);
+                }
+                
+                clearInterval(enquireStatus);
+                
+                setTimeout(function() {
+                    if (json['status']) {
+                        location = '{{ success_location }}';
+                    } else {
+                        location = '{{ failed_location }}&message=' + encodeURIComponent(json['message']);
+                    }
+                }, 2000);
+            }
+            
+            if (typeof json['failed'] !== 'undefined' && json['failed']) {
+                location = '{{ unknown_location }}';
+            }
+        }
+    });
+}, 1500);
+</script>
+{% endif %}
+{{ footer }} 
